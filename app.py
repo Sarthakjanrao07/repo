@@ -4,16 +4,12 @@ from crawl4ai import AsyncWebCrawler
 
 app = Flask(__name__)
 
-async def crawl(url):
+async def crawl_async(url):
     async with AsyncWebCrawler(
         headless=True,
-        browser_type="chromium",
-        verbose=True
+        browser_type="chromium"
     ) as crawler:
-        result = await crawler.arun(
-            url=url,
-            bypass_cache=True
-        )
+        result = await crawler.arun(url=url)
         return result.markdown
 
 
@@ -27,15 +23,12 @@ def crawl_api():
 
         url = data["url"]
 
-        # ✅ FIX
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(crawl(url))
-        loop.close()
+        # ✅ FIX (MOST IMPORTANT)
+        result = asyncio.run(crawl_async(url))
 
         return jsonify({
             "success": True,
-            "data": result
+            "data": result[:2000]  # limit for safety
         })
 
     except Exception as e:
