@@ -1,4 +1,4 @@
 flask
-crawl4ai
 gunicorn
-playwright
+requests
+beautifulsoup4
