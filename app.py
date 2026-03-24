@@ -1,11 +1,24 @@
 from flask import Flask, request, jsonify
-import requests
-from bs4 import BeautifulSoup
+import asyncio
+from crawl4ai import AsyncWebCrawler
 
 app = Flask(__name__)
 
+async def crawl(url):
+    async with AsyncWebCrawler(
+        headless=True,
+        browser_type="chromium",
+        verbose=True
+    ) as crawler:
+        result = await crawler.arun(
+            url=url,
+            bypass_cache=True
+        )
+        return result.markdown
+
+
 @app.route('/crawl', methods=['POST'])
-def crawl():
+def crawl_api():
     try:
         data = request.get_json()
 
@@ -14,14 +27,15 @@ def crawl():
 
         url = data["url"]
 
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        text = soup.get_text()
+        # ✅ FIX
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(crawl(url))
+        loop.close()
 
         return jsonify({
             "success": True,
-            "data": text[:2000]
+            "data": result
         })
 
     except Exception as e:
@@ -30,4 +44,4 @@ def crawl():
 
 @app.route('/')
 def home():
-    return "Working ✅"
+    return "Crawl4AI API is running ✅"
