@@ -31,11 +31,10 @@ def crawl_api():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# test route (browser sathi)
 @app.route('/')
 def home():
     return "Crawl4AI API is running ✅"
 
-# run server
-app.run(host="0.0.0.0", port=5000)
+# 🔥 IMPORTANT FIX
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
