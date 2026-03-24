@@ -4,13 +4,19 @@ from crawl4ai import AsyncWebCrawler
 
 app = Flask(__name__)
 
-# async crawl function
 async def crawl(url):
-    async with AsyncWebCrawler() as crawler:
-        result = await crawler.arun(url=url)
+    async with AsyncWebCrawler(
+        headless=True,
+        browser_type="chromium",
+        verbose=True
+    ) as crawler:
+        result = await crawler.arun(
+            url=url,
+            bypass_cache=True
+        )
         return result.markdown
 
-# API route
+
 @app.route('/crawl', methods=['POST'])
 def crawl_api():
     try:
@@ -21,7 +27,11 @@ def crawl_api():
 
         url = data["url"]
 
-        result = asyncio.run(crawl(url))
+        # ✅ FIX
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(crawl(url))
+        loop.close()
 
         return jsonify({
             "success": True,
@@ -31,10 +41,7 @@ def crawl_api():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/')
 def home():
     return "Crawl4AI API is running ✅"
-
-# 🔥 IMPORTANT FIX
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
